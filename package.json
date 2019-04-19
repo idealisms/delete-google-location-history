@@ -1,0 +1,14 @@
+{
+  "name": "delete-google-location-history",
+  "version": "0.1.0",
+  "description": "Delete parts of your Google location history",
+  "main": "dglh.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tony chang",
+  "license": "Unlicense",
+  "dependencies": {
+    "puppeteer": "^1.14.0"
+  }
+}
