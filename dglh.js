@@ -3,12 +3,12 @@ const readline = require('readline');
 const { once } = require('events');
 const moment = require('moment');
 
-async function waitForSignIn() {
+async function waitForUser(message) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
-  rl.question('Please sign in then press enter to continue. ', (_) => {
+  rl.question(message, (_) => {
     rl.close();
   });
   await once(rl, 'close');
@@ -25,7 +25,10 @@ async function selectMenu(selector, itemText, page) {
     if (itemsText[i] != itemText) {
       continue;
     }
-    await menuItems[i].click();
+    await Promise.all([
+      page.waitForNavigation({waitUntil: 'networkidle0'}),
+      menuItems[i].click(),
+    ]);
     break;
   }
 }
@@ -43,7 +46,7 @@ async function run() {
   let url = page.url();
 
   if (url.startsWith('https://accounts.google.com/signin')) {
-    await waitForSignIn();
+    await waitForUser('Please sign in then press enter to continue. ');
   }
 
   if (!url.startsWith('https://www.google.com/maps/timeline') &&
@@ -65,25 +68,32 @@ async function run() {
 
     console.log(`picking day ${m.format('D MMM')}`);
     await page.click('.day-picker');
-    await page.click(`.day-picker td[aria-label="${m.format('D MMM')}"]`);
+    await Promise.all([
+      page.waitForNavigation({waitUntil: 'networkidle0'}),
+      page.click(`.day-picker td[aria-label="${m.format('D MMM')}"]`),
+    ]);
 
-    console.log('wait for day to load (xpath)');
-    await page.waitForXPath(`//div[contains(text(), "${m.format('MMMM D, YYYY')}")]`);
-    await page.waitForSelector('#page-header-buffer-bar', {hidden: true});
-    await page.click('i.delete-button');
+    console.log('verify day loaded');
+    await page.waitForXPath(`//div[contains(text(), "${m.format('MMMM D, YYYY')}")]`)
+    console.log('click delete button');
+    await page.click('.map-page-content i.delete-button');
 
     console.log('wait for delete dialog');
     await page.waitForSelector('button.delete-button');
+    console.log('confirm delete day');
     await page.click('button.delete-button');
 
     console.log('wait for snackbar to appear');
     await page.waitForSelector('.snack-bar', {visible: true});
-    console.log('wait for snackbar to hide');
-    await page.waitForSelector('.snack-bar', {hidden: true});
+    console.log('click on header to reset page');
+    await Promise.all([
+      page.waitForNavigation({waitUntil: 'networkidle0'}),
+      page.click('h1.header-title'),
+    ]);
   }
 
 
-  console.log('ok!');
+  console.log('All done!');
   browser.close();
 }
 
