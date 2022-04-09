@@ -9,7 +9,7 @@
   "author": "tony chang",
   "license": "Unlicense",
   "dependencies": {
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "puppeteer": "^2.1.1"
   }
 }
